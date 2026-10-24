@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
@@ -90,6 +91,7 @@ fun PlayerSheet(
     onDismiss: () -> Unit,
     onOpenQueue: () -> Unit,
     onClearError: () -> Unit = {},
+    onOpenDiagnostics: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (track == null) return
@@ -168,16 +170,29 @@ fun PlayerSheet(
                     )
                 }
 
-                IconButton(
-                    onClick = { /* More options */ },
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More Options",
-                        tint = SpotifyWhite,
-                        modifier = Modifier.size(22.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onOpenDiagnostics,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Audio Diagnostics",
+                            tint = SpotifyMuted,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { /* More options */ },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More Options",
+                            tint = SpotifyWhite,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
 
@@ -276,6 +291,18 @@ fun PlayerSheet(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
+                    IconButton(
+                        onClick = onOpenDiagnostics,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Audio Diagnostics",
+                            tint = SpotifyWhite,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
                         onClick = onClearError,
                         modifier = Modifier.size(24.dp)

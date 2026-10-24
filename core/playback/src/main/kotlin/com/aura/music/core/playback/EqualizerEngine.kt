@@ -12,26 +12,59 @@ class EqualizerEngine {
     private var bassBoost: BassBoost? = null
     private var virtualizer: Virtualizer? = null
 
-    private var currentSessionId: Int = 0
+    var currentSessionId: Int = 0
+        private set
+
+    var isEnabled: Boolean = false
+        private set
+
+    val isAttached: Boolean
+        get() = equalizer != null || bassBoost != null || virtualizer != null
 
     fun bindToAudioSession(audioSessionId: Int) {
-        if (audioSessionId == 0 || audioSessionId == currentSessionId) return
-        release()
+        if (audioSessionId == 0) return
+        if (audioSessionId == currentSessionId && isAttached) return
+
         currentSessionId = audioSessionId
 
+        // Fully bypass audio effects if equalizer is not enabled by user
+        if (!isEnabled) {
+            releaseEffects()
+            return
+        }
+
+        attachEffects(audioSessionId)
+    }
+
+    private fun attachEffects(audioSessionId: Int) {
+        releaseEffects()
         try {
             equalizer = Equalizer(0, audioSessionId).apply {
-                enabled = true
+                enabled = isEnabled
             }
             bassBoost = BassBoost(0, audioSessionId).apply {
-                enabled = true
+                enabled = isEnabled
             }
             virtualizer = Virtualizer(0, audioSessionId).apply {
-                enabled = true
+                enabled = isEnabled
             }
         } catch (e: Exception) {
             // AudioEffects may fail on custom hardware/ROMs; gracefully fall back
-            release()
+            releaseEffects()
+        }
+    }
+
+    private fun releaseEffects() {
+        try {
+            equalizer?.release()
+            bassBoost?.release()
+            virtualizer?.release()
+        } catch (e: Exception) {
+            // Ignore
+        } finally {
+            equalizer = null
+            bassBoost = null
+            virtualizer = null
         }
     }
 
@@ -103,28 +136,28 @@ class EqualizerEngine {
     }
 
     fun setEnabled(enabled: Boolean) {
-        try {
-            equalizer?.enabled = enabled
-            bassBoost?.enabled = enabled
-            virtualizer?.enabled = enabled
-        } catch (e: Exception) {
-            // Ignore
+        this.isEnabled = enabled
+        if (enabled) {
+            if (currentSessionId != 0 && !isAttached) {
+                attachEffects(currentSessionId)
+            } else {
+                try {
+                    equalizer?.enabled = true
+                    bassBoost?.enabled = true
+                    virtualizer?.enabled = true
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
+        } else {
+            // Complete bypass: release effects from audio hardware session so audio track is 100% untouched
+            releaseEffects()
         }
     }
 
     fun release() {
-        try {
-            equalizer?.release()
-            bassBoost?.release()
-            virtualizer?.release()
-        } catch (e: Exception) {
-            // Ignore
-        } finally {
-            equalizer = null
-            bassBoost = null
-            virtualizer = null
-            currentSessionId = 0
-        }
+        releaseEffects()
+        currentSessionId = 0
     }
 
     private fun createDefaultFallbackBands(): List<EqualizerBand> {

@@ -47,8 +47,12 @@ object PlaybackModule {
 
     @Provides
     @Singleton
-    fun provideAudioPlayer(exoPlayer: ExoPlayer): AudioPlayer {
-        return ExoAudioPlayer(exoPlayer)
+    fun provideAudioPlayer(
+        @ApplicationContext context: Context,
+        exoPlayer: ExoPlayer,
+        equalizerEngine: EqualizerEngine
+    ): AudioPlayer {
+        return ExoAudioPlayer(exoPlayer, context, equalizerEngine)
     }
 
     @Provides

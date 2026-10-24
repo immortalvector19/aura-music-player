@@ -3,6 +3,7 @@ package com.aura.music.core.playback
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import com.aura.music.core.model.AudioDiagnosticInfo
 import com.aura.music.core.model.PlaybackState
 import com.aura.music.core.model.RepeatMode
 import com.aura.music.core.model.ShuffleMode
@@ -239,10 +240,15 @@ class PlaybackManager(
         _playbackState.update {
             it.copy(
                 isPlaying = false,
-                errorMessage = message
+                errorMessage = message,
+                diagnosticInfo = player.getDiagnosticInfo()
             )
         }
         stopPositionPolling()
+    }
+
+    override fun onDiagnosticInfoChanged(info: AudioDiagnosticInfo) {
+        _playbackState.update { it.copy(diagnosticInfo = info) }
     }
 
     fun clearError() {
