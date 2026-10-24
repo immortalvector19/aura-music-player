@@ -104,7 +104,9 @@ fun MiniPlayerBar(
 
                 // Track details (Spotify typography)
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 6.dp)
                 ) {
                     Text(
                         text = track.title,

@@ -16,6 +16,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.MediaStyleNotificationHelper
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.Futures
@@ -89,12 +90,49 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val activeManager = PlaybackManager.instance
+        when (intent?.action) {
+            ACTION_PREVIOUS -> activeManager?.skipPrevious() ?: player?.seekToPreviousMediaItem()
+            ACTION_PLAY_PAUSE -> {
+                if (player?.isPlaying == true) {
+                    activeManager?.pause() ?: player?.pause()
+                } else {
+                    activeManager?.play() ?: player?.play()
+                }
+            }
+            ACTION_NEXT -> activeManager?.skipNext() ?: player?.seekToNextMediaItem()
+            ACTION_STOP -> {
+                activeManager?.pause() ?: player?.pause()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } else {
+                    @Suppress("DEPRECATION")
+                    stopForeground(true)
+                }
+                stopSelf()
+            }
+        }
         startForegroundWithNotification()
         return super.onStartCommand(intent, flags, startId)
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val isPlaying = player?.isPlaying ?: false
+        if (!isPlaying) {
+            stopSelf()
+        }
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
+    }
+
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        startForegroundWithNotification()
+    }
+
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        startForegroundWithNotification()
     }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -105,6 +143,7 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         } else {
             audioFocusController.onPlaybackStopped()
             audioBecomingNoisyReceiver.unregister()
+            startForegroundWithNotification()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 stopForeground(STOP_FOREGROUND_DETACH)
             } else {
@@ -149,6 +188,7 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         val track = PlaybackManager.instance?.currentTrack?.value
         val title = track?.title ?: "Aura Music"
         val artist = track?.artist ?: "Playing"
+        val isPlaying = player?.isPlaying ?: false
 
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = if (launchIntent != null) {
@@ -160,12 +200,42 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
             )
         } else null
 
+        val prevIntent = Intent(this, AuraMediaService::class.java).apply { action = ACTION_PREVIOUS }
+        val prevPendingIntent = PendingIntent.getService(
+            this, 1, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val playPauseIntent = Intent(this, AuraMediaService::class.java).apply { action = ACTION_PLAY_PAUSE }
+        val playPausePendingIntent = PendingIntent.getService(
+            this, 2, playPauseIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val nextIntent = Intent(this, AuraMediaService::class.java).apply { action = ACTION_NEXT }
+        val nextPendingIntent = PendingIntent.getService(
+            this, 3, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        val playPauseActionTitle = if (isPlaying) "Pause" else "Play"
+
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(title)
             .setContentText(artist)
-            .setOngoing(true)
+            .setSubText(track?.album ?: "Aura")
+            .setOngoing(isPlaying)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
+            .addAction(playPauseIcon, playPauseActionTitle, playPausePendingIntent)
+            .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
+
+        mediaSession?.let { session ->
+            notificationBuilder.setStyle(
+                MediaStyleNotificationHelper.MediaStyle(session)
+                    .setShowActionsInCompactView(0, 1, 2)
+            )
+        }
 
         if (pendingIntent != null) {
             notificationBuilder.setContentIntent(pendingIntent)
@@ -203,5 +273,9 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         const val CHANNEL_ID = "aura_playback_channel"
         const val NOTIFICATION_ID = 1001
         const val COMMAND_TOGGLE_FAVORITE = "com.aura.music.COMMAND_TOGGLE_FAVORITE"
+        const val ACTION_PLAY_PAUSE = "com.aura.music.ACTION_PLAY_PAUSE"
+        const val ACTION_PREVIOUS = "com.aura.music.ACTION_PREVIOUS"
+        const val ACTION_NEXT = "com.aura.music.ACTION_NEXT"
+        const val ACTION_STOP = "com.aura.music.ACTION_STOP"
     }
 }

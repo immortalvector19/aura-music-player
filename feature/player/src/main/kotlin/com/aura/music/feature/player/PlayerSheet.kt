@@ -1,5 +1,8 @@
 package com.aura.music.feature.player
 
+import android.graphics.drawable.BitmapDrawable
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +45,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,13 +58,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.palette.graphics.Palette
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.aura.music.core.designsystem.theme.SpotifyBlack
 import com.aura.music.core.designsystem.theme.SpotifyDivider
 import com.aura.music.core.designsystem.theme.SpotifyGreen
@@ -71,6 +80,8 @@ import com.aura.music.core.model.PlaybackState
 import com.aura.music.core.model.RepeatMode
 import com.aura.music.core.model.ShuffleMode
 import com.aura.music.core.model.Track
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Authentic Spotify-styled Now Playing screen with album art gradient,
@@ -108,11 +119,53 @@ fun PlayerSheet(
     val duration = if (track.durationMs > 0) track.durationMs else 1L
     val progressFraction = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
 
-    // Spotify immersive ambient vertical gradient
+    val context = LocalContext.current
+    var dominantColor by remember(track.id) { mutableStateOf(Color(0xFF22362A)) }
+
+    LaunchedEffect(track.id, track.albumArtUri) {
+        val artUri = track.albumArtUri
+        if (!artUri.isNullOrEmpty()) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val request = ImageRequest.Builder(context)
+                        .data(artUri)
+                        .allowHardware(false)
+                        .size(256, 256)
+                        .build()
+                    val result = context.imageLoader.execute(request)
+                    if (result is SuccessResult) {
+                        val bitmap = (result.drawable as? BitmapDrawable)?.bitmap
+                        if (bitmap != null) {
+                            val palette = Palette.from(bitmap).generate()
+                            val swatch = palette.dominantSwatch
+                                ?: palette.vibrantSwatch
+                                ?: palette.darkVibrantSwatch
+                                ?: palette.mutedSwatch
+                            if (swatch != null) {
+                                withContext(Dispatchers.Main) {
+                                    dominantColor = Color(swatch.rgb)
+                                }
+                            }
+                        }
+                    }
+                } catch (_: Exception) { }
+            }
+        } else {
+            dominantColor = Color(0xFF22362A)
+        }
+    }
+
+    val animatedDominantColor by animateColorAsState(
+        targetValue = dominantColor,
+        animationSpec = tween(durationMillis = 600),
+        label = "palette_gradient"
+    )
+
+    // Dynamic Spotify gradient derived from album art, gracefully flowing into deep obsidian black
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF22362A), // Soft dark forest green ambient top
-            Color(0xFF161F1A),
+            animatedDominantColor.copy(alpha = 0.85f),
+            animatedDominantColor.copy(alpha = 0.38f),
             SpotifyBlack,
             SpotifyBlack
         )

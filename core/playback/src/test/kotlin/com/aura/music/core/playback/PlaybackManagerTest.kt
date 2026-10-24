@@ -176,4 +176,19 @@ class PlaybackManagerTest {
         playbackManager.toggleShuffle()
         assertThat(playbackManager.playbackState.value.shuffleMode).isEqualTo(ShuffleMode.OFF)
     }
+
+    @Test
+    fun `onError with queue of multiple tracks automatically advances to next track`() = testScope.runTest {
+        playbackManager.setQueue(listOf(track1, track2), startIndex = 0)
+        assertThat(playbackManager.currentTrack.value).isEqualTo(track1)
+
+        // Simulate file read error on track1
+        playbackManager.onError("Source error: java.io.FileNotFoundException")
+        testDispatcher.scheduler.advanceTimeBy(1000L)
+
+        // Automatically skips to track2
+        assertThat(playbackManager.currentTrack.value).isEqualTo(track2)
+        assertThat(fakePlayer.lastMediaItemUri).isEqualTo(track2.mediaUri)
+        playbackManager.pause()
+    }
 }

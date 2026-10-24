@@ -41,6 +41,7 @@ class PlaybackManager(
 
     private var currentTrackIndex = -1
     private var positionUpdateJob: Job? = null
+    private var consecutiveErrorCount = 0
 
     init {
         player.setListener(this)
@@ -171,6 +172,9 @@ class PlaybackManager(
         playTrackAtIndex(prevIndex)
     }
 
+    fun skipToNext() = skipNext()
+    fun skipToPrevious() = skipPrevious()
+
     fun toggleRepeat() {
         _playbackState.update { state ->
             val next = when (state.repeatMode) {
@@ -197,6 +201,9 @@ class PlaybackManager(
     }
 
     override fun onPlaybackStateChanged(isPlaying: Boolean, isEnded: Boolean) {
+        if (isPlaying) {
+            consecutiveErrorCount = 0
+        }
         val duration = player.duration()
         _playbackState.update {
             it.copy(
@@ -237,6 +244,8 @@ class PlaybackManager(
     }
 
     override fun onError(message: String) {
+        consecutiveErrorCount++
+        val q = _queue.value
         _playbackState.update {
             it.copy(
                 isPlaying = false,
@@ -245,6 +254,14 @@ class PlaybackManager(
             )
         }
         stopPositionPolling()
+
+        // Gracefully auto-skip to next track if file is unreadable or deleted, up to queue size
+        if (q.size > 1 && consecutiveErrorCount < q.size) {
+            coroutineScope.launch {
+                delay(800)
+                skipNext()
+            }
+        }
     }
 
     override fun onDiagnosticInfoChanged(info: AudioDiagnosticInfo) {
