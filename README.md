@@ -59,9 +59,15 @@
 
 ---
 
-## 🔒 Sharing & Access
+## 📥 Download & Install
 
-This repository is **Private**.
-- To share access with collaborators or testers, navigate to:
-  **Settings > Collaborators > Add people** on GitHub and enter their GitHub username or email address.
-- Collaborators can access the source code and download the compiled APK/AAB from the [v1.0.0 Releases](https://github.com/immortalvector19/aura-music-player/releases/tag/v1.0.0).
+You can download the compiled APK or AAB directly from the [v1.0.0 Release](https://github.com/immortalvector19/aura-music-player/releases/tag/v1.0.0):
+
+- 📲 **[Download Debug APK](https://github.com/immortalvector19/aura-music-player/releases/download/v1.0.0/app-debug.apk)** (29.4 MB — Direct Android Install)
+- 📦 **[Download Release AAB](https://github.com/immortalvector19/aura-music-player/releases/download/v1.0.0/app-release.aab)** (9.4 MB — Google Play Bundle)
+
+---
+
+## 🔒 License & Open Source
+
+This repository is **Public**. Contributions, issues, and forks are welcome!
