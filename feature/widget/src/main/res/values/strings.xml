@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Aura Player</string>
+    <string name="widget_description">Control Aura Music playback directly from your home screen</string>
+    <string name="tile_name">Aura Playback</string>
+</resources>
