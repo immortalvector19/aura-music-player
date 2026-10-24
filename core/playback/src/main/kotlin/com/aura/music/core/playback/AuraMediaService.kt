@@ -88,6 +88,11 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         eq.bindToAudioSession(exoPlayer.audioSessionId)
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundWithNotification()
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
     }
@@ -96,9 +101,16 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         if (isPlaying) {
             audioFocusController.onPlaybackStarted()
             audioBecomingNoisyReceiver.register()
+            startForegroundWithNotification()
         } else {
             audioFocusController.onPlaybackStopped()
             audioBecomingNoisyReceiver.unregister()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_DETACH)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(false)
+            }
         }
     }
 
@@ -110,6 +122,12 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
     override fun onDestroy() {
         audioBecomingNoisyReceiver.unregister()
         audioFocusController.abandonFocus()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
         if (PlaybackManager.instance == null) {
             equalizerEngine.release()
         }
@@ -124,6 +142,46 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
         }
         player = null
         super.onDestroy()
+    }
+
+    private fun startForegroundWithNotification() {
+        createNotificationChannel()
+        val track = PlaybackManager.instance?.currentTrack?.value
+        val title = track?.title ?: "Aura Music"
+        val artist = track?.artist ?: "Playing"
+
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val pendingIntent = if (launchIntent != null) {
+            PendingIntent.getActivity(
+                this,
+                0,
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else null
+
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle(title)
+            .setContentText(artist)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        if (pendingIntent != null) {
+            notificationBuilder.setContentIntent(pendingIntent)
+        }
+
+        val notification = notificationBuilder.build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
     private fun createNotificationChannel() {
@@ -143,6 +201,7 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
 
     companion object {
         const val CHANNEL_ID = "aura_playback_channel"
+        const val NOTIFICATION_ID = 1001
         const val COMMAND_TOGGLE_FAVORITE = "com.aura.music.COMMAND_TOGGLE_FAVORITE"
     }
 }
