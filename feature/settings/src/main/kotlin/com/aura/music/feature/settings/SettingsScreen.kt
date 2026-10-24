@@ -51,19 +51,23 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aura.music.core.model.AudioDiagnosticInfo
 import com.aura.music.core.model.StorageInfo
+import com.aura.music.core.ui.AudioDiagnosticsDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsRoute(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    diagnosticInfo: AudioDiagnosticInfo = AudioDiagnosticInfo()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     SettingsScreen(
         uiState = uiState,
+        diagnosticInfo = diagnosticInfo,
         onToggleDataSaver = viewModel::toggleDataSaver,
         onToggleWifiOnly = viewModel::toggleWifiOnlyDownloads,
         onToggleAudioFocusDucking = viewModel::toggleAudioFocusDucking,
@@ -80,6 +84,7 @@ fun SettingsRoute(
 @Composable
 fun SettingsScreen(
     uiState: SettingsUiState,
+    diagnosticInfo: AudioDiagnosticInfo = AudioDiagnosticInfo(),
     onToggleDataSaver: (Boolean) -> Unit,
     onToggleWifiOnly: (Boolean) -> Unit,
     onToggleAudioFocusDucking: (Boolean) -> Unit,
@@ -91,6 +96,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showDiagnosticsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -252,6 +258,35 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Section 5: Developer & Diagnostics
+            SettingsSectionHeader(title = "Developer / Diagnostics")
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button) { showDiagnosticsDialog = true }
+                    .padding(vertical = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Audio Pipeline Audit", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Live inspection of player state, hardware AudioSession, stream volume, and ContentResolver probe",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // App About Card
             Card(
                 colors = CardDefaults.cardColors(
@@ -295,6 +330,14 @@ fun SettingsScreen(
                     showLanguageDialog = false
                 },
                 onDismiss = { showLanguageDialog = false }
+            )
+        }
+
+        // Audio Diagnostics Dialog
+        if (showDiagnosticsDialog) {
+            AudioDiagnosticsDialog(
+                diagnosticInfo = diagnosticInfo,
+                onDismiss = { showDiagnosticsDialog = false }
             )
         }
     }

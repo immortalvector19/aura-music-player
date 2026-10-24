@@ -70,7 +70,6 @@ import com.aura.music.core.designsystem.theme.SpotifyMuted
 import com.aura.music.core.designsystem.theme.SpotifyWhite
 import com.aura.music.core.playback.EqualizerEngine
 import com.aura.music.core.playback.PlaybackManager
-import com.aura.music.core.ui.AudioDiagnosticsDialog
 import com.aura.music.core.ui.MiniPlayerBar
 import com.aura.music.core.ui.PermissionRationaleDialog
 import com.aura.music.core.ui.PermissionType
@@ -121,7 +120,6 @@ class MainActivity : ComponentActivity() {
                 var currentDestination by remember { mutableStateOf(AppDestination.LIBRARY) }
                 var isPlayerSheetExpanded by remember { mutableStateOf(false) }
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                var showAudioDiagnostics by remember { mutableStateOf(false) }
 
                 // ViewModels
                 val libraryViewModel = remember { LibraryViewModel(trackRepository) }
@@ -204,17 +202,6 @@ class MainActivity : ComponentActivity() {
                                             overflow = TextOverflow.Ellipsis,
                                             modifier = Modifier.weight(1f)
                                         )
-                                        IconButton(
-                                            onClick = { showAudioDiagnostics = true },
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Info,
-                                                contentDescription = "Audio Diagnostics",
-                                                tint = SpotifyWhite,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        }
                                         Spacer(modifier = Modifier.width(4.dp))
                                         IconButton(
                                             onClick = playerViewModel::clearError,
@@ -324,6 +311,7 @@ class MainActivity : ComponentActivity() {
                             AppDestination.SETTINGS -> {
                                 SettingsRoute(
                                     viewModel = settingsViewModel,
+                                    diagnosticInfo = playbackState.diagnosticInfo,
                                     onBackClick = { currentDestination = AppDestination.LIBRARY }
                                 )
                             }
@@ -355,18 +343,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onClearError = playerViewModel::clearError,
-                                onOpenDiagnostics = { showAudioDiagnostics = true },
                                 onOpenQueue = {}
                             )
                         }
-                    }
-
-                    // Audio Pipeline Diagnostics Dialog
-                    if (showAudioDiagnostics) {
-                        AudioDiagnosticsDialog(
-                            diagnosticInfo = playbackState.diagnosticInfo,
-                            onDismiss = { showAudioDiagnostics = false }
-                        )
                     }
 
                     // Permission Rationale Dialog
