@@ -39,8 +39,8 @@ object PlaybackModule {
             .build()
 
         return ExoPlayer.Builder(context)
-            .setAudioAttributes(audioAttributes, false)
-            .setHandleAudioBecomingNoisy(false)
+            .setAudioAttributes(audioAttributes, true)
+            .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
     }

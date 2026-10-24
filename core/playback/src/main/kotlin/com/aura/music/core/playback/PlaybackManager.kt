@@ -93,7 +93,8 @@ class PlaybackManager(
                 currentTrack = track,
                 isPlaying = true,
                 currentPositionMs = 0L,
-                durationMs = track.durationMs
+                durationMs = track.durationMs,
+                errorMessage = null
             )
         }
         startPositionPolling()
@@ -235,8 +236,17 @@ class PlaybackManager(
     }
 
     override fun onError(message: String) {
-        _playbackState.update { it.copy(isPlaying = false) }
+        _playbackState.update {
+            it.copy(
+                isPlaying = false,
+                errorMessage = message
+            )
+        }
         stopPositionPolling()
+    }
+
+    fun clearError() {
+        _playbackState.update { it.copy(errorMessage = null) }
     }
 
     private fun startPositionPolling() {

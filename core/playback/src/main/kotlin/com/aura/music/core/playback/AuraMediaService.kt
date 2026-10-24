@@ -43,8 +43,8 @@ class AuraMediaService : MediaSessionService(), Player.Listener {
                 .build()
 
             ExoPlayer.Builder(this)
-                .setAudioAttributes(audioAttributes, false)
-                .setHandleAudioBecomingNoisy(false)
+                .setAudioAttributes(audioAttributes, true)
+                .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(C.WAKE_MODE_LOCAL)
                 .build()
         }

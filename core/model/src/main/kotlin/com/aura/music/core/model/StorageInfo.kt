@@ -19,5 +19,6 @@ data class PlaybackState(
     val repeatMode: RepeatMode = RepeatMode.OFF,
     val shuffleMode: ShuffleMode = ShuffleMode.OFF,
     val isCrossfadeEnabled: Boolean = false,
-    val crossfadeDurationSeconds: Int = 3
+    val crossfadeDurationSeconds: Int = 3,
+    val errorMessage: String? = null
 )

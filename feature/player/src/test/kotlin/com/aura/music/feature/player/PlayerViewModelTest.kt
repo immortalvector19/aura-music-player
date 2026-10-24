@@ -47,6 +47,11 @@ private class TestAudioPlayer : AudioPlayer {
     override fun setListener(listener: AudioPlayerListener) {
         this.listener = listener
     }
+
+    fun simulateError(message: String) {
+        isPlayingState = false
+        listener?.onError(message)
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -188,5 +193,15 @@ class PlayerViewModelTest {
 
         assertThat(viewModel.playbackState.value.currentPositionMs).isEqualTo(120_000L)
         viewModel.togglePlayPause()
+    }
+
+    @Test
+    fun clearError_clearsErrorMessageInPlaybackState() = testScope.runTest {
+        viewModel.playTrack(track1)
+        fakePlayer.simulateError("Simulated playback error")
+        assertThat(viewModel.playbackState.value.errorMessage).isNotNull()
+
+        viewModel.clearError()
+        assertThat(viewModel.playbackState.value.errorMessage).isNull()
     }
 }

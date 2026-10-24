@@ -49,4 +49,8 @@ class PlayerViewModel(
     fun toggleFavorite(isFavorite: Boolean) {
         playbackManager.toggleFavorite(isFavorite)
     }
+
+    fun clearError() {
+        playbackManager.clearError()
+    }
 }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -87,6 +89,7 @@ fun PlayerSheet(
     onToggleFavorite: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     onOpenQueue: () -> Unit,
+    onClearError: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (track == null) return
@@ -243,6 +246,47 @@ fun PlayerSheet(
                         tint = if (track.isFavorite) SpotifyGreen else SpotifyMuted,
                         modifier = Modifier.size(26.dp)
                     )
+                }
+            }
+
+            // Optional Error Banner if playback error occurs
+            val errorMessage = playbackState.errorMessage
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFE22134).copy(alpha = 0.22f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Playback Error",
+                        tint = Color(0xFFFF5252),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = errorMessage,
+                        fontSize = 12.sp,
+                        color = SpotifyWhite,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = onClearError,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Dismiss error",
+                            tint = SpotifyMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 
