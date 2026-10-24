@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="auraGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1ED760" />
+      <stop offset="100%" stop-color="#1DB954" />
+    </linearGradient>
+  </defs>
+  <!-- Background Disc -->
+  <rect width="256" height="256" rx="64" fill="#121212" />
+  
+  <!-- Aura Soundwave Monogram A -->
+  <g fill="none" stroke="url(#auraGlow)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Letter A Diagonal Struts -->
+    <path d="M 68 200 L 128 56 L 188 200" stroke-width="20" />
+    
+    <!-- Acoustic Pulse Arcs (Inner to Outer) -->
+    <!-- Arc 1: Soundwave Core Crossbar -->
+    <path d="M 88 156 Q 128 132 168 156" stroke-width="16" />
+    
+    <!-- Arc 2: Harmonic Mid Resonance -->
+    <path d="M 98 126 Q 128 106 158 126" stroke-width="14" />
+    
+    <!-- Arc 3: High Frequency Aura Crest -->
+    <path d="M 108 96 Q 128 80 148 96" stroke-width="12" />
+  </g>
+</svg>

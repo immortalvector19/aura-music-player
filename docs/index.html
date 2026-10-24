@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Music — Native Android Player in Spotify Aesthetic</title>
+  <meta name="description" content="Experience Aura Music Player: A high-performance native Android music player crafted with Spotify's dark aesthetic, Media3 background playback, and studio-grade 10-band equalizer.">
+  <link rel="icon" type="image/svg+xml" href="aura_logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --spotify-black: #121212;
+      --spotify-darkest: #000000;
+      --spotify-surface: #181818;
+      --spotify-surface-elevated: #242424;
+      --spotify-surface-highlight: #2a2a2a;
+      --spotify-green: #1DB954;
+      --spotify-green-bright: #1ED760;
+      --spotify-white: #ffffff;
+      --spotify-muted: #b3b3b3;
+      --spotify-subdued: #535353;
+      --spotify-divider: #282828;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--spotify-black);
+      color: var(--spotify-white);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(30, 215, 96, 0.12) 0%, rgba(18, 18, 18, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(20px);
+      background-color: rgba(18, 18, 18, 0.85);
+      border-bottom: 1px solid var(--spotify-divider);
+      z-index: 100;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--spotify-white);
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      color: var(--spotify-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--spotify-white);
+    }
+
+    .nav-cta {
+      background-color: var(--spotify-white);
+      color: var(--spotify-darkest);
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .nav-cta:hover {
+      background-color: var(--spotify-green-bright);
+      transform: scale(1.04);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      max-width: 1000px;
+      margin: 60px auto 40px;
+      padding: 0 24px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--spotify-surface-highlight);
+      border: 1px solid var(--spotify-divider);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--spotify-green-bright);
+      margin-bottom: 24px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--spotify-green-bright);
+      box-shadow: 0 0 10px var(--spotify-green-bright);
+    }
+
+    h1 {
+      font-size: clamp(38px, 6vw, 68px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--spotify-green-bright) 0%, #a8ff78 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lead {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--spotify-muted);
+      max-width: 720px;
+      margin: 0 auto 36px;
+    }
+
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background-color: var(--spotify-green-bright);
+      color: var(--spotify-darkest);
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 8px 30px rgba(30, 215, 96, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 35px rgba(30, 215, 96, 0.5);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background-color: var(--spotify-surface-elevated);
+      color: var(--spotify-white);
+      border: 1px solid var(--spotify-surface-highlight);
+      padding: 16px 28px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--spotify-surface-highlight);
+      border-color: var(--spotify-subdued);
+    }
+
+    /* Live Web Player Section */
+    .player-demo {
+      max-width: 600px;
+      margin: 0 auto 60px;
+      background: linear-gradient(180deg, var(--spotify-surface-elevated) 0%, var(--spotify-surface) 100%);
+      border: 1px solid var(--spotify-divider);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      text-align: left;
+    }
+
+    .player-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .album-art {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      background: #181818;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .track-meta h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--spotify-white);
+    }
+
+    .track-meta p {
+      font-size: 13px;
+      color: var(--spotify-muted);
+    }
+
+    .track-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .track-pill {
+      background-color: var(--spotify-surface-highlight);
+      border: 1px solid transparent;
+      color: var(--spotify-muted);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .track-pill.active {
+      background-color: var(--spotify-green-bright);
+      color: var(--spotify-darkest);
+      font-weight: 700;
+    }
+
+    audio {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      outline: none;
+      filter: invert(1) hue-rotate(180deg);
+    }
+
+    /* Features Grid */
+    .section-title {
+      text-align: center;
+      margin: 80px 0 40px;
+    }
+
+    .section-title h2 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--spotify-muted);
+      font-size: 16px;
+    }
+
+    .grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background-color: var(--spotify-surface);
+      border: 1px solid var(--spotify-divider);
+      border-radius: 16px;
+      padding: 32px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--spotify-surface-highlight);
+    }
+
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--spotify-muted);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--spotify-divider);
+      margin-top: 100px;
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--spotify-subdued);
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--spotify-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--spotify-green-bright);
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <header>
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <svg viewBox="0 0 256 256" fill="none">
+          <rect width="256" height="256" rx="64" fill="#121212" />
+          <path d="M68 200 L128 56 L188 200" stroke="#1ED760" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M88 156 Q128 132 168 156" stroke="#1ED760" stroke-width="16" stroke-linecap="round"/>
+          <path d="M98 126 Q128 106 158 126" stroke="#1ED760" stroke-width="14" stroke-linecap="round"/>
+          <path d="M108 96 Q128 80 148 96" stroke="#1ED760" stroke-width="12" stroke-linecap="round"/>
+        </svg>
+        <span>Aura Music</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#demo" class="nav-link">Web Preview</a>
+        <a href="https://github.com/immortalvector19/aura-music-player" target="_blank" class="nav-link">GitHub</a>
+        <a href="https://github.com/immortalvector19/aura-music-player/releases/download/v1.0.0/app-debug.apk" class="nav-cta">Download APK</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">
+        <div class="badge-dot"></div>
+        <span>Version 1.0.0 Now Available</span>
+      </div>
+
+      <h1>Your Music, Pure &<br><span>Uncompromised.</span></h1>
+      <p class="lead">
+        A high-fidelity native Android music player crafted with Spotify's dark aesthetic, 
+        Media3 ExoPlayer background playback, and studio-grade 10-band equalization.
+      </p>
+
+      <div class="cta-group">
+        <a href="https://github.com/immortalvector19/aura-music-player/releases/download/v1.0.0/app-debug.apk" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+          </svg>
+          Download APK (v1.0.0)
+        </a>
+        <a href="https://github.com/immortalvector19/aura-music-player/releases/download/v1.0.0/app-release.aab" class="btn-secondary">
+          📦 Download Play AAB
+        </a>
+        <a href="https://github.com/immortalvector19/aura-music-player" target="_blank" class="btn-secondary">
+          ⭐ GitHub Repository
+        </a>
+      </div>
+
+      <!-- Live Web Player Demo -->
+      <div class="player-demo" id="demo">
+        <div class="track-selector">
+          <button class="track-pill active" onclick="switchTrack('demo_1.wav', 'Acoustic Sunrise', 'Organic Waves')">Acoustic Sunrise</button>
+          <button class="track-pill" onclick="switchTrack('demo_2.wav', 'Midnight Groove', 'Electronic Dreams')">Midnight Groove</button>
+          <button class="track-pill" onclick="switchTrack('demo_3.wav', 'Ambient Pulse', 'Deep Focus Chill')">Ambient Pulse</button>
+        </div>
+
+        <div class="player-header">
+          <div class="album-art">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#1ED760">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div class="track-meta">
+            <h3 id="track-title">Acoustic Sunrise</h3>
+            <p id="track-artist">Aura Studio • Organic Waves</p>
+          </div>
+        </div>
+
+        <audio id="audio-player" controls src="demo_1.wav"></audio>
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features" id="features">
+      <div class="section-title">
+        <h2>Engineered for Discerning Ears</h2>
+        <p>Combining modern Android architecture with Spotify's timeless design philosophy.</p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <span class="card-icon">🖤</span>
+          <h3>Spotify Dark Aesthetic</h3>
+          <p>Immersive #121212 canvas with elevated card surfaces, signature Spotify Green (#1ED760) accents, and pill-shaped filter controls.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🎵</span>
+          <h3>Media3 ExoPlayer Engine</h3>
+          <p>Foreground playback service with zero-latency audio session synchronization, audio focus Duck/Pause handling, and lock screen media controls.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🎚️</span>
+          <h3>10-Band Graphic Equalizer</h3>
+          <p>Real-time parametric AudioEffect equalization engine featuring custom bass boost, virtualizer spatializer, and studio-grade audio presets.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">⚡</span>
+          <h3>Low-End Device Optimized</h3>
+          <p>Memory footprint strictly maintained under 100MB heap to guarantee butter-smooth 60fps scrolling on budget phones with 2-3 GB RAM.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">📦</span>
+          <h3>Offline-First Architecture</h3>
+          <p>Room SQLite database with FTS4 full-text search indexing, scoped storage compliance, and bundled demo audio tracks.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🛡️</span>
+          <h3>100% Private & Open Source</h3>
+          <p>Zero tracking, no telemetries, and zero third-party analytics. Pure local-first media playback under your complete control.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Aura Music Player &copy; 2026 • Crafted with Jetpack Compose & Media3</p>
+    <p style="margin-top: 8px;"><a href="https://github.com/immortalvector19/aura-music-player">View on GitHub</a> • <a href="https://github.com/immortalvector19/aura-music-player/releases/tag/v1.0.0">Release Notes</a></p>
+  </footer>
+
+  <script>
+    function switchTrack(src, title, album) {
+      const player = document.getElementById('audio-player');
+      const titleElem = document.getElementById('track-title');
+      const artistElem = document.getElementById('track-artist');
+      
+      player.src = src;
+      titleElem.textContent = title;
+      artistElem.textContent = 'Aura Studio • ' + album;
+      
+      document.querySelectorAll('.track-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === title.trim());
+      });
+      
+      player.play().catch(() => {});
+    }
+  </script>
+</body>
+</html>
